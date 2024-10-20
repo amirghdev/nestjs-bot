@@ -22,12 +22,13 @@ export class CustomContext extends TelegrafContext {
     super(update, telegram, botInfo);
   }
 
-  async sendCustomMessage(text: string, inline_keyboard: InlineKeyboardButton[][], message_id: number = this.from.id) {
+  async sendCustomMessage(text: string, inline_keyboard: InlineKeyboardButton[][]) {
     try {
-      const message = await this.telegram.sendMessage(message_id, text, {
+      const message = await this.telegram.sendMessage(this.chat.id, text, {
         parse_mode: 'HTML',
-        //@ts-expect-error telegraf is stupid
-        disable_web_page_preview: true,
+        link_preview_options: {
+          is_disabled: true,
+        },
         reply_markup: {
           inline_keyboard,
         },
@@ -50,16 +51,18 @@ export class CustomContext extends TelegrafContext {
       message_id = this.session.message_id;
 
       if (!this.session.message_id) {
-        // @ts-expect-error telegraf is stupid 2
-        this.session.message_id = this.update.callback_query.message.message_id;
+        if ('callback_query' in this.update) {
+          this.session.message_id = this.update.callback_query.message.message_id;
+        }
         message_id = this.session.message_id;
       }
 
       if (this.session.message_id) {
-        await this.telegram.editMessageText(this.from.id, message_id, undefined, text, {
+        await this.telegram.editMessageText(this.chat.id, message_id, undefined, text, {
           parse_mode: 'HTML',
-          //@ts-expect-error telegraf is stupid 3
-          disable_web_page_preview: true,
+          link_preview_options: {
+            is_disabled: true,
+          },
           reply_markup: {
             inline_keyboard,
           },
